@@ -1,7 +1,3 @@
-// token: agllzvqap4yzzjf8w5t19wexqawhvla5u0h0poif
-// url: https://api.json-generator.com/templates/rMum_X1PMGd_/data
-
-
 import { useState } from 'react'
 
 function App() {
@@ -18,7 +14,7 @@ function App() {
   const [mapListLoadingSpeed, setMapListLoadingSpeed] = useState(0)
   const [setListLoadingSpeed, setSetListLoadingSpeed] = useState(0)
 
-
+  
   type ListItem = {
     id: number,
     name: string,
@@ -31,11 +27,22 @@ function App() {
     }]
   }
 
-  function mesureSpeed(start: number) {
+  /**
+   *Returns the difference between the current and last performance
+   *
+   * @param {number} start
+   * @return {number} 
+   */
+  function mesureSpeed(start: number): number {
     const elapsedTime = performance.now() - start
     return elapsedTime / 1000
   }
 
+  /**
+   * Populates the object list with data
+   *
+   * @param {ListItem} item
+   */
   function populateObjectList(item: ListItem) {
     setObjectList((prevState: any) => {
       return {
@@ -45,22 +52,41 @@ function App() {
     })
   }
 
+  /**
+   * Populates the array list with data
+   *
+   * @param {ListItem} item
+   */
   function populateArrayList(item: ListItem) {
     setArrayList((prevState) => [...prevState, item])
   }
 
+  /**
+   * Populates the map list with data
+   *
+   * @param {ListItem} item
+   */
   function populateMapList(item: ListItem) {
     setMapList((prevState) => {
       return new Map(prevState).set(item.id, item)
     })
   }
 
+  /**
+   * Populates the set list with data
+   *
+   * @param {ListItem} item
+   */
   function populateSetList(item: ListItem) {
     setSetList((prevState) => {
       return new Set(prevState).add(item)
     })
   }
 
+  /**
+   * Fetches the data from the API and measure and call all the populate functions
+   *
+   */
   async function populate() {
     const response = await fetch('https://api.json-generator.com/templates/rMum_X1PMGd_/data', {
       method: 'POST',
