@@ -6,7 +6,9 @@ import { useState } from 'react'
 
 function App() {
 
-  const [objectList, setObjectList] = useState({})
+  const [data, setData] = useState<ListItem[]>([])
+
+  const [objectList, setObjectList] = useState<any>({})
   const [arrayList, setArrayList] = useState<ListItem[]>([])
   const [mapList, setMapList] = useState(new Map())
   const [setList, setSetList] = useState(new Set())
@@ -15,6 +17,7 @@ function App() {
   const [arrayListLoadingSpeed, setArrayListLoadingSpeed] = useState(0)
   const [mapListLoadingSpeed, setMapListLoadingSpeed] = useState(0)
   const [setListLoadingSpeed, setSetListLoadingSpeed] = useState(0)
+
 
   type ListItem = {
     id: number,
@@ -30,11 +33,11 @@ function App() {
 
   function mesureSpeed(start: number) {
     const elapsedTime = performance.now() - start
-    return elapsedTime
+    return elapsedTime / 1000
   }
 
   function populateObjectList(item: ListItem) {
-    setObjectList((prevState) => {
+    setObjectList((prevState: any) => {
       return {
         ...prevState,
         [item.id]: item
@@ -66,11 +69,8 @@ function App() {
         'Authorization': 'bearer agllzvqap4yzzjf8w5t19wexqawhvla5u0h0poif'
       }
     })
-    const data: ListItem[] = await response.json()
-    console.dir(data)
-
-          //populateMapList(item)
-      //populateSetList(item)
+    
+    setData(await response.json())
 
     let start = performance.now()
     data.forEach(item => {
@@ -100,10 +100,55 @@ function App() {
   return (
     <> 
       <button onClick={populate}>Populate</button><br />
-      objectList Loading Speed: {objectListLoadingSpeed}ms <br />
-      arrayList Loading Speed: {arrayListLoadingSpeed}ms <br />
-      mapList Loading Speed: {mapListLoadingSpeed}ms <br />
-      setList Loading Speed: {setListLoadingSpeed}ms <br />
+      <button>Delete element</button><input type="number" id="indexToDeleteInput" />
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Object List</th>
+            <th>Array List</th>
+            <th>Map List</th>
+            <th>Set List</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>First element</td>
+            <td>{data && data.length > 0 ? JSON.stringify(objectList[Object.keys(objectList)[0]]) : ""}</td>
+            <td>{data && data.length > 0 ? JSON.stringify(arrayList[0]) : ""}</td>
+            <td>{data && data.length > 0 ? JSON.stringify(mapList.get(data[0].id)) : ""}</td>
+            <td>{data && data.length > 0 ? JSON.stringify(setList.values().next().value) : ""}</td>
+          </tr>
+          <tr>
+            <td>Loading Speed</td>
+            <td>{objectListLoadingSpeed}</td>
+            <td>{arrayListLoadingSpeed}</td>
+            <td>{mapListLoadingSpeed}</td>
+            <td>{setListLoadingSpeed}</td>
+          </tr>
+          <tr>
+            <td>Deleting Speed</td>
+            <td>{objectListLoadingSpeed}</td>
+            <td>{arrayListLoadingSpeed}</td>
+            <td>{mapListLoadingSpeed}</td>
+            <td>{setListLoadingSpeed}</td>
+          </tr>
+          <tr>
+            <td>Adding Speed</td>
+            <td>{objectListLoadingSpeed}</td>
+            <td>{arrayListLoadingSpeed}</td>
+            <td>{mapListLoadingSpeed}</td>
+            <td>{setListLoadingSpeed}</td>
+          </tr>
+          <tr>
+            <td>Update Speed</td>
+            <td>{objectListLoadingSpeed}</td>
+            <td>{arrayListLoadingSpeed}</td>
+            <td>{mapListLoadingSpeed}</td>
+            <td>{setListLoadingSpeed}</td>
+          </tr>
+        </tbody>
+      </table>
     </>
   )
 }
