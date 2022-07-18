@@ -164,9 +164,9 @@ function App() {
 
   return (
     <> 
-      <button onClick={populate}>Populate</button><br />
-      <button onClick={() => deleteRow()}>Delete element</button><input type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} />
-      <table>
+      <button onClick={populate} className="py-2 pl-2 pr-2 bg-green-600 text-center text-white">Populate</button><br />
+      <button onClick={() => deleteRow()} className="py-2 pl-2 pr-2 bg-red-600 text-center text-white">Delete element</button><input className="border-2" type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} />
+      <table className="w-9/12">
         <thead>
           <tr>
             <th></th>
