@@ -15,6 +15,7 @@ function App() {
   const [setListPerformance, setSetListPerformance] = useState<ListPerformance>({loading: 0, deleting: 0, adding: 0, updating: 0})
 
   const indexToDeleteInput = useRef<HTMLInputElement>(null)
+  const indexToUpdateInput = useRef<HTMLInputElement>(null)
 
   type ListItem = {
     id: number,
@@ -185,6 +186,10 @@ function App() {
     })
   }
 
+  /**
+   * Add a new item to the lists
+   *
+   */
   function addItem() {
     if (!data || data.length === 0)
       return
@@ -253,11 +258,75 @@ function App() {
     })
   }
 
+  function updateItem() {
+    if (!data || data.length === 0)
+      return
+
+    const index = (indexToUpdateInput.current ? indexToUpdateInput.current.value : 0) as number
+    const item = data[index]
+
+    {
+      const start = performance.now()
+      setObjectList((prevState: any) => {
+        prevState[item.id].name = `${item.name}-updated`
+        return {
+          ...prevState
+        }
+      })
+      setObjectListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setArrayList((prevState) => {
+        prevState[index].name = `${item.name}-updated`
+        return [...prevState]
+      })
+      setArrayListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setMapList((prevState) => {
+        prevState.set(item.id, {
+          ...prevState.get(item.id),
+          name: `${item.name}-updated`
+        })
+        return new Map(prevState)
+      })
+      setMapListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setSetList((prevState) => {
+        const newItem = item
+        newItem.name = `${item.name}-updated`
+        prevState.delete(item)
+        return new Set(prevState).add(newItem)
+      })
+      setSetListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
+  }
+
   return (
     <> 
-      <button onClick={getDataFromAPI}>Load Data</button> ({data?.length})<br />
-      <button onClick={() => deleteItem()}>Delete element</button><input type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} /> <br />
-      <button onClick={() => addItem()}>Add element</button>
+      <button onClick={getDataFromAPI}>Load Data {data ? "(" + data?.length + ")" : ""}</button><br />
+      <button onClick={() => deleteItem()}>Delete element</button><input type="number" ref={indexToDeleteInput} id="indexToDeleteInput" /><br />
+      <button onClick={() => addItem()}>Add element</button><br />
+      <button onClick={() => updateItem()}>Update element</button><input type="number" ref={indexToUpdateInput} id="indexToUpdateInput" /> <br />
       <table>
         <thead>
           <tr>
@@ -270,11 +339,11 @@ function App() {
         </thead>
         <tbody>
           <tr>
-            <td>First element</td>
-            <td>{data ? JSON.stringify(objectList[Object.keys(objectList)[0]]) : ""}</td>
-            <td>{data ? JSON.stringify(arrayList[0]) : ""}</td>
-            <td>{data ? JSON.stringify(mapList.get(data[0].id)) : ""}</td>
-            <td>{data ? JSON.stringify(setList.values().next().value) : ""}</td>
+            <td>Last element</td>
+            <td>{data ? JSON.stringify(objectList[Object.keys(objectList)[data.length - 1]]) : ""}</td>
+            <td>{data ? JSON.stringify(arrayList[data.length - 1]) : ""}</td>
+            <td>{data ? JSON.stringify(mapList.get(data[data.length - 1].id)) : ""}</td>
+            <td>{data ? JSON.stringify([...setList][data.length - 1]) : ""}</td>
           </tr>
           <tr>
             <td>Loading Speed</td>
