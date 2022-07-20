@@ -7,7 +7,7 @@ function App() {
   const [objectList, setObjectList] = useState<any>()
   const [arrayList, setArrayList] = useState<ListItem[]>([])
   const [mapList, setMapList] = useState(new Map())
-  const [setList, setSetList] = useState(new Set())
+  const [setList, setSetList] = useState(new Set<ListItem>())
 
   const [objectListPerformance, setObjectListPerformance] = useState<ListPerformance>({loading: 0, deleting: 0, adding: 0, updating: 0})
   const [arrayListPerformance, setArrayListPerformance] = useState<ListPerformance>({loading: 0, deleting: 0, adding: 0, updating: 0})
@@ -128,6 +128,10 @@ function App() {
       return
 
     const index = (indexToDeleteInput.current ? indexToDeleteInput.current.value : 0) as number
+
+    if (index < 0 || index >= data.length)
+      return
+
     const item = data[index]
 
     {
@@ -258,11 +262,19 @@ function App() {
     })
   }
 
+  /**
+   * Updates an item in the lists
+   *
+   */
   function updateItem() {
     if (!data || data.length === 0)
       return
 
     const index = (indexToUpdateInput.current ? indexToUpdateInput.current.value : 0) as number
+
+    if (index < 0 || index >= data.length)
+      return
+
     const item = data[index]
 
     {
@@ -308,11 +320,9 @@ function App() {
 
     {
       const start = performance.now()
-      setSetList((prevState) => {
-        const newItem = item
-        newItem.name = `${item.name}-updated`
-        prevState.delete(item)
-        return new Set(prevState).add(newItem)
+      setSetList((prevState: Set<ListItem>) => {
+        [...prevState][index].name = `${item.name}-updated`
+        return new Set(prevState)
       })
       setSetListPerformance(prevState => {
         prevState.updating = measurePerformance(start)
