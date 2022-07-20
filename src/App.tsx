@@ -333,10 +333,10 @@ function App() {
 
   return (
     <> 
-      <button onClick={getDataFromAPI}>Load Data {data ? "(" + data?.length + ")" : ""}</button><br />
-      <button onClick={() => deleteItem()}>Delete element</button><input type="number" ref={indexToDeleteInput} id="indexToDeleteInput" /><br />
-      <button onClick={() => addItem()}>Add element</button><br />
-      <button onClick={() => updateItem()}>Update element</button><input type="number" ref={indexToUpdateInput} id="indexToUpdateInput" /> <br />
+      <button onClick={getDataFromAPI} className="bg-gray-500 text-center text-white py-1 pl-1 pr-1">Load Data {data ? "(" + data?.length + ")" : ""}</button><br />
+      <button onClick={() => deleteItem()} className="bg-red-600 text-center text-white py-1 pl-1 pr-1">Delete element</button><input className="border-2" type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} /><br />
+      <button onClick={() => addItem()} className="bg-green-600 text-center text-white py-1 pl-1 pr-1">Add element</button><br />
+      <button onClick={() => updateItem()} className="bg-orange-500 text-center text-white py-1 pl-1 pr-1">Update element</button><input className="border-2" type="number" ref={indexToUpdateInput} id="indexToUpdateInput" defaultValue={0} /> <br />
       <table>
         <thead>
           <tr>
