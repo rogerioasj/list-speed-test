@@ -118,7 +118,11 @@ function App() {
     setData(apiData)
   }
 
-  function deleteRow() {
+  /**
+   * Deletes an item from the lists
+   *
+   */
+  function deleteItem() {
     if (!data || data.length === 0)
       return
 
@@ -181,10 +185,79 @@ function App() {
     })
   }
 
+  function addItem() {
+    if (!data || data.length === 0)
+      return
+
+    const item = data[data.length - 1]
+    const newItem: ListItem = {
+      id: item.id + 1,
+      name: `${item.name}-new`,
+      age: item.age + 1,
+      isMarried: !item.isMarried,
+      children: [{
+        id: item.children[0].id + 1,
+        name: `${item.children[0].name}-new`,
+        age: item.children[0].age + 1,
+      }]
+    }
+
+    {
+      const start = performance.now()
+      setObjectList((prevState: any) => {
+        return {
+          ...prevState,
+          [newItem.id]: newItem
+        }
+      })
+      setObjectListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setArrayList((prevState) => [...prevState, newItem])
+      setArrayListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setMapList((prevState) => {
+        return new Map(prevState).set(newItem.id, newItem)
+      })
+      setMapListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setSetList((prevState) => {
+        return new Set(prevState).add(newItem)
+      }
+      )
+      setSetListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    setData((prevState) => {
+      return [...prevState!, newItem]
+    })
+  }
+
   return (
     <> 
       <button onClick={getDataFromAPI}>Load Data</button> ({data?.length})<br />
-      <button onClick={() => deleteRow()}>Delete element</button><input type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} />
+      <button onClick={() => deleteItem()}>Delete element</button><input type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} /> <br />
+      <button onClick={() => addItem()}>Add element</button>
       <table>
         <thead>
           <tr>
