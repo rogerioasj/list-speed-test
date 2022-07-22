@@ -2,12 +2,12 @@ import { useState, useRef } from 'react'
 
 function App() {
 
-  const [data, setData] = useState<ListItem[]>([])
+  const [data, setData] = useState<ListItem[]>()
 
-  const [objectList, setObjectList] = useState<any>({})
+  const [objectList, setObjectList] = useState<any>()
   const [arrayList, setArrayList] = useState<ListItem[]>([])
   const [mapList, setMapList] = useState(new Map())
-  const [setList, setSetList] = useState(new Set())
+  const [setList, setSetList] = useState(new Set<ListItem>())
 
   const [objectListPerformance, setObjectListPerformance] = useState<ListPerformance>({loading: 0, deleting: 0, adding: 0, updating: 0})
   const [arrayListPerformance, setArrayListPerformance] = useState<ListPerformance>({loading: 0, deleting: 0, adding: 0, updating: 0})
@@ -15,8 +15,8 @@ function App() {
   const [setListPerformance, setSetListPerformance] = useState<ListPerformance>({loading: 0, deleting: 0, adding: 0, updating: 0})
 
   const indexToDeleteInput = useRef<HTMLInputElement>(null)
+  const indexToUpdateInput = useRef<HTMLInputElement>(null)
 
-  
   type ListItem = {
     id: number,
     name: string,
@@ -42,16 +42,15 @@ function App() {
    * @param {number} currentPerformance
    * @return {number} 
    */
-  function mesurePerformance(currentPerformance: number): number {
+  function measurePerformance(currentPerformance: number): number {
     const elapsedTime = performance.now() - currentPerformance
-    return elapsedTime / 1000
+    return Number(elapsedTime.toFixed(3))
   }
 
   /**
-   * Fetches the data from the API and measure and call all the populate functions
-   *
+   * Fetches the data from the API
    */
-  async function populate() {
+  async function getDataFromAPI() {
     const response = await fetch('https://api.json-generator.com/templates/rMum_X1PMGd_/data', {
       method: 'POST',
       headers: {
@@ -60,113 +59,285 @@ function App() {
       }
     })
     
-    setData(await response.json())
-
-    if (data.length ===  0) 
+    const apiData: ListItem[] = await response.json()
+    if (!apiData || apiData.length === 0)
       return
 
-    let start = performance.now()
-    data.forEach(item => {
+    {
+      const start = performance.now()
+      apiData.forEach(item => {
+        setObjectList((prevState: any) => {
+          return {
+            ...prevState,
+            [item.id]: item
+          }
+        })
+      })
+      setObjectListPerformance(prevState => {
+        prevState.loading = measurePerformance(start)
+        return prevState
+      })
+    }
+    
+    {
+      const start = performance.now()
+      apiData.forEach(item => {
+        setArrayList((prevState) => [...prevState, item])
+      })
+      setArrayListPerformance(prevState => {
+        prevState.loading = measurePerformance(start)
+        return prevState
+      })      
+    }
+
+    {
+      const start = performance.now()
+      apiData.forEach(item => {
+        setMapList((prevState) => {
+          return new Map(prevState).set(item.id, item)
+        })
+      })
+      setMapListPerformance(prevState => {
+        prevState.loading = measurePerformance(start)
+        return prevState
+      });      
+    }
+
+    {
+      const start = performance.now()
+      apiData.forEach(item => {
+        setSetList((prevState) => {
+          return new Set(prevState).add(item)
+        })
+      })
+      setSetListPerformance(prevState => {
+        prevState.loading = measurePerformance(start)
+        return prevState
+      })      
+    }
+
+    setData(apiData)
+  }
+
+  /**
+   * Deletes an item from the lists
+   *
+   */
+  function deleteItem() {
+    if (!data || data.length === 0)
+      return
+
+    const index = (indexToDeleteInput.current ? indexToDeleteInput.current.value : 0) as number
+
+    if (index < 0 || index >= data.length)
+      return
+
+    const item = data[index]
+
+    {
+      const start = performance.now()
       setObjectList((prevState: any) => {
+        delete prevState[item.id]
         return {
-          ...prevState,
-          [item.id]: item
+          ...prevState
         }
       })
-    })
-    setObjectListPerformance(prevState => {
-      prevState.loading = mesurePerformance(start)
-      return prevState
-    })
-    
-    start = performance.now()
-    data.forEach(item => {
-      setArrayList((prevState) => [...prevState, item])
-    })
-    setArrayListPerformance(prevState => {
-      prevState.loading = mesurePerformance(start)
-      return prevState
-    })
+      setObjectListPerformance(prevState => {
+        prevState.deleting = measurePerformance(start)
+        return prevState
+      })      
+    }
 
-    start = performance.now()
-    data.forEach(item => {
+    {
+      const start = performance.now()
+      setArrayList((prevState) => {
+        prevState.splice(index, 1)
+        return [...prevState]
+      })
+      setArrayListPerformance(prevState => {
+        prevState.deleting = measurePerformance(start)
+        return prevState
+      })      
+    }
+
+    {
+      const start = performance.now()
       setMapList((prevState) => {
-        return new Map(prevState).set(item.id, item)
+        prevState.delete(item.id)
+        return new Map(prevState)
       })
-    })
-    setMapListPerformance(prevState => {
-      prevState.loading = mesurePerformance(start)
-      return prevState
-    })
-
-    start = performance.now()
-    data.forEach(item => {
+      setMapListPerformance(prevState => {
+        prevState.deleting = measurePerformance(start)
+        return prevState
+      })
+    }
+    
+    {
+      const start = performance.now()
       setSetList((prevState) => {
-        return new Set(prevState).add(item)
+        prevState.delete(item)
+        return new Set(prevState)
       })
-    })
-    setSetListPerformance(prevState => {
-      prevState.loading = mesurePerformance(start)
-      return prevState
+      setSetListPerformance(prevState => {
+        prevState.deleting = measurePerformance(start)
+        return prevState
+      })      
+    }
+
+    setData((prevState) => {
+      prevState!.splice(index, 1)
+      return [...prevState!]
     })
   }
 
-  function deleteRow() {
-    if (!data || data.length === 0) {
+  /**
+   * Add a new item to the lists
+   *
+   */
+  function addItem() {
+    if (!data || data.length === 0)
       return
+
+    const item = data[data.length - 1]
+    const newItem: ListItem = {
+      id: item.id + 1,
+      name: `${item.name}-new`,
+      age: item.age + 1,
+      isMarried: !item.isMarried,
+      children: [{
+        id: item.children[0].id + 1,
+        name: `${item.children[0].name}-new`,
+        age: item.children[0].age + 1,
+      }]
     }
 
-    const index: any = indexToDeleteInput.current?.value
-    const item = data[index ? index : 0]
+    {
+      const start = performance.now()
+      setObjectList((prevState: any) => {
+        return {
+          ...prevState,
+          [newItem.id]: newItem
+        }
+      })
+      setObjectListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
 
-    let start = performance.now()
-    setObjectList((prevState: any) => {
-      delete prevState[item.id]
-      return {
-        ...prevState
+    {
+      const start = performance.now()
+      setArrayList((prevState) => [...prevState, newItem])
+      setArrayListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setMapList((prevState) => {
+        return new Map(prevState).set(newItem.id, newItem)
+      })
+      setMapListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setSetList((prevState) => {
+        return new Set(prevState).add(newItem)
       }
-    })
-    setObjectListPerformance(prevState => {
-      prevState.deleting = mesurePerformance(start)
-      return prevState
-    })
+      )
+      setSetListPerformance(prevState => {
+        prevState.adding = measurePerformance(start)
+        return prevState
+      })
+    }
 
-    start = performance.now()
-    setArrayList((prevState) => {
-      prevState.splice(index, 1)
-      return [...prevState]
+    setData((prevState) => {
+      return [...prevState!, newItem]
     })
-    setArrayListPerformance(prevState => {
-      prevState.deleting = mesurePerformance(start)
-      return prevState
-    })
+  }
 
-    start = performance.now()
-    setMapList((prevState) => {
-      prevState.delete(item.id)
-      return new Map(prevState)
-    })
-    setMapListPerformance(prevState => {
-      prevState.deleting = mesurePerformance(start)
-      return prevState
-    })
+  /**
+   * Updates an item in the lists
+   *
+   */
+  function updateItem() {
+    if (!data || data.length === 0)
+      return
 
-    start = performance.now()
-    setSetList((prevState) => {
-      prevState.delete(item)
-      return new Set(prevState)
-    })
-    setSetListPerformance(prevState => {
-      prevState.deleting = mesurePerformance(start)
-      return prevState
-    })
+    const index = (indexToUpdateInput.current ? indexToUpdateInput.current.value : 0) as number
+
+    if (index < 0 || index >= data.length)
+      return
+
+    const item = data[index]
+
+    {
+      const start = performance.now()
+      setObjectList((prevState: any) => {
+        prevState[item.id].name = `${item.name}-updated`
+        return {
+          ...prevState
+        }
+      })
+      setObjectListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setArrayList((prevState) => {
+        prevState[index].name = `${item.name}-updated`
+        return [...prevState]
+      })
+      setArrayListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setMapList((prevState) => {
+        prevState.set(item.id, {
+          ...prevState.get(item.id),
+          name: `${item.name}-updated`
+        })
+        return new Map(prevState)
+      })
+      setMapListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
+
+    {
+      const start = performance.now()
+      setSetList((prevState: Set<ListItem>) => {
+        [...prevState][index].name = `${item.name}-updated`
+        return new Set(prevState)
+      })
+      setSetListPerformance(prevState => {
+        prevState.updating = measurePerformance(start)
+        return prevState
+      })
+    }
   }
 
   return (
     <> 
-      <button onClick={populate} className="py-2 pl-2 pr-2 bg-green-600 text-center text-white">Populate</button><br />
-      <button onClick={() => deleteRow()} className="py-2 pl-2 pr-2 bg-red-600 text-center text-white">Delete element</button><input className="border-2" type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} />
-      <table className="w-9/12">
+      <button onClick={getDataFromAPI} className="bg-gray-500 text-center text-white py-1 pl-1 pr-1">Load Data {data ? "(" + data?.length + ")" : ""}</button><br />
+      <button onClick={() => deleteItem()} className="bg-red-600 text-center text-white py-1 pl-1 pr-1">Delete element</button><input className="border-2" type="number" ref={indexToDeleteInput} id="indexToDeleteInput" defaultValue={0} /><br />
+      <button onClick={() => addItem()} className="bg-green-600 text-center text-white py-1 pl-1 pr-1">Add element</button><br />
+      <button onClick={() => updateItem()} className="bg-orange-500 text-center text-white py-1 pl-1 pr-1">Update element</button><input className="border-2" type="number" ref={indexToUpdateInput} id="indexToUpdateInput" defaultValue={0} /> <br />
+      <table>
         <thead>
           <tr>
             <th></th>
@@ -178,11 +349,11 @@ function App() {
         </thead>
         <tbody>
           <tr>
-            <td>First element</td>
-            <td>{data && data.length > 0 ? JSON.stringify(objectList[Object.keys(objectList)[0]]) : ""}</td>
-            <td>{data && data.length > 0 ? JSON.stringify(arrayList[0]) : ""}</td>
-            <td>{data && data.length > 0 ? JSON.stringify(mapList.get(data[0].id)) : ""}</td>
-            <td>{data && data.length > 0 ? JSON.stringify(setList.values().next().value) : ""}</td>
+            <td>Last element</td>
+            <td>{data ? JSON.stringify(objectList[Object.keys(objectList)[data.length - 1]]) : ""}</td>
+            <td>{data ? JSON.stringify(arrayList[data.length - 1]) : ""}</td>
+            <td>{data ? JSON.stringify(mapList.get(data[data.length - 1].id)) : ""}</td>
+            <td>{data ? JSON.stringify([...setList][data.length - 1]) : ""}</td>
           </tr>
           <tr>
             <td>Loading Speed</td>
