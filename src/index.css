@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  @apply bg-gray-800 text-white;
+}
+
+body button {
+  @apply py-1 pl-1 pr-1 mr-1;
+}
