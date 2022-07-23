@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import localData from "./assets/data.json";
 
 function App() {
   const [data, setData] = useState<ListItem[]>();
@@ -53,6 +54,11 @@ function App() {
     updating: number;
   };
 
+  useEffect(() => {
+    indexToDeleteInput.current ? indexToDeleteInput.current.value = String(data ? data.length - 1: 0) : null
+    indexToUpdateInput.current ? indexToUpdateInput.current.value = String(data ? data.length - 1: 0) : null
+  }, [data]);
+
   /**
    * Returns the difference between the current and last performance
    *
@@ -68,18 +74,19 @@ function App() {
    * Fetches the data from the API
    */
   async function getDataFromAPI() {
-    const response = await fetch(
-      "https://api.json-generator.com/templates/rMum_X1PMGd_/data",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "bearer agllzvqap4yzzjf8w5t19wexqawhvla5u0h0poif",
-        },
-      }
-    );
+    // const response = await fetch(
+    //   "https://api.json-generator.com/templates/rMum_X1PMGd_/data",
+    //   {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: "bearer agllzvqap4yzzjf8w5t19wexqawhvla5u0h0poif",
+    //     },
+    //   }
+    // );
+    // const apiData: ListItem[] = await response.json();
 
-    const apiData: ListItem[] = await response.json();
+    const apiData: ListItem[] = (localData as unknown) as ListItem[];
     if (!apiData || apiData.length === 0) return;
 
     {
@@ -384,7 +391,8 @@ function App() {
           type="number"
           ref={indexToDeleteInput}
           id="indexToDeleteInput"
-          value={data ? data?.length - 1 : 0}
+          defaultValue={0}
+          // value={data ? data?.length - 1 : 0}
         />
         <br />
         <button
@@ -428,7 +436,8 @@ function App() {
           type="number"
           ref={indexToUpdateInput}
           id="indexToUpdateInput"
-          value={data ? data?.length - 1 : 0}
+          defaultValue={0}
+          // value={data ? data?.length - 1 : 0}
         />
         <br />
       </div>
