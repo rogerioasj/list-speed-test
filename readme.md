@@ -12,6 +12,6 @@ Feel free to give me a shout if I'm seeing things wrong.
 
 ## Check it yourself
 
-Clone the repository into a folder: git clone URL
-Install dependencies: npm i
-Execute app: npm run dev
+- Clone the repository into a folder: git clone URL
+- Install dependencies: npm i
+- Execute app: npm run dev
