@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import localData from "./assets/data.json";
+import { useState, useRef, useEffect } from "react"
+import localData from "./assets/data.json"
+import './app.css'
 
 function App() {
   const [data, setData] = useState<ListItem[]>();
+  const [loading, setLoading] = useState(false);
 
   const [objectList, setObjectList] = useState<any>();
   const [arrayList, setArrayList] = useState<ListItem[]>([]);
@@ -29,6 +31,10 @@ function App() {
   const [setListPerformance, setSetListPerformance] = useState<ListPerformance>(
     { loading: 0, deleting: 0, adding: 0, updating: 0 }
   );
+  const [bestLoadingPerformance, setBestLoadingPerformance] = useState<number>(0);
+  const [bestDeletingPerformance, setBestDeletingPerformance] = useState<number>(0);
+  const [bestAddingPerformance, setBestAddingPerformance] = useState<number>(0);
+  const [bestUpdatingPerformance, setBestUpdatingPerformance] = useState<number>(0);
 
   const indexToDeleteInput = useRef<HTMLInputElement>(null);
   const indexToUpdateInput = useRef<HTMLInputElement>(null);
@@ -57,8 +63,26 @@ function App() {
   useEffect(() => {
     indexToDeleteInput.current ? indexToDeleteInput.current.value = String(data ? data.length - 1: 0) : null
     indexToUpdateInput.current ? indexToUpdateInput.current.value = String(data ? data.length - 1: 0) : null
+
+    setLoading(false)
   }, [data]);
 
+  useEffect(() => {
+    setBestLoadingPerformance(Math.min(...[objectListPerformance.loading, arrayListPerformance.loading, mapListPerformance.loading, setListPerformance.loading]))
+  }, [objectListPerformance.loading])
+
+  useEffect(() => {
+    setBestDeletingPerformance(Math.min(...[objectListPerformance.deleting, arrayListPerformance.deleting, mapListPerformance.deleting, setListPerformance.deleting]))
+  }, [objectListPerformance.deleting])
+
+  useEffect(() => {
+    setBestAddingPerformance(Math.min(...[objectListPerformance.adding, arrayListPerformance.adding, mapListPerformance.adding, setListPerformance.adding]))
+  }, [objectListPerformance.adding])
+
+  useEffect(() => {
+    setBestUpdatingPerformance(Math.min(...[objectListPerformance.updating, arrayListPerformance.updating, mapListPerformance.updating, setListPerformance.updating]))
+  }, [objectListPerformance.updating])
+  
   /**
    * Returns the difference between the current and last performance
    *
@@ -71,20 +95,32 @@ function App() {
   }
 
   /**
+   * Clear data, lists aand performance measures
+   *
+   */
+  function resetData() {
+    setData([])
+    setObjectList([])
+    setArrayList([])
+    setMapList(new Map())
+    setSetList(new Set<ListItem>())
+
+    setObjectListPerformance({ loading: 0, deleting: 0, adding: 0, updating: 0 })
+    setArrayListPerformance({ loading: 0, deleting: 0, adding: 0, updating: 0 })
+    setMapListPerformance({ loading: 0, deleting: 0, adding: 0, updating: 0 })
+    setSetListPerformance({ loading: 0, deleting: 0, adding: 0, updating: 0 })
+  }
+
+  /**
    * Fetches the data from the API
    */
-  async function getDataFromAPI() {
-    // const response = await fetch(
-    //   "https://api.json-generator.com/templates/rMum_X1PMGd_/data",
-    //   {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       Authorization: "bearer agllzvqap4yzzjf8w5t19wexqawhvla5u0h0poif",
-    //     },
-    //   }
-    // );
-    // const apiData: ListItem[] = await response.json();
+  // async function getDataFromAPI() {
+  useEffect(() => {
+    if (!loading)
+      return
+
+    if (data && data.length > 0) 
+      resetData()
 
     const apiData: ListItem[] = (localData as unknown) as ListItem[];
     if (!apiData || apiData.length === 0) return;
@@ -143,7 +179,8 @@ function App() {
     }
 
     setData(apiData);
-  }
+    setLoading(false)
+  }, [loading])
 
   /**
    * Deletes an item from the lists
@@ -214,6 +251,8 @@ function App() {
       prevState!.splice(index, 1);
       return [...prevState!];
     });
+
+    setBestDeletingPerformance(Math.max(...[objectListPerformance.deleting, arrayListPerformance.deleting, mapListPerformance.deleting, setListPerformance.deleting]))
   }
 
   /**
@@ -286,6 +325,8 @@ function App() {
     setData((prevState) => {
       return [...prevState!, newItem];
     });
+
+    setBestAddingPerformance(Math.max(...[objectListPerformance.adding, arrayListPerformance.adding, mapListPerformance.adding, setListPerformance.adding]))
   }
 
   /**
@@ -355,15 +396,37 @@ function App() {
         return prevState;
       });
     }
+
+    setBestUpdatingPerformance(Math.max(...[objectListPerformance.updating, arrayListPerformance.updating, mapListPerformance.updating, setListPerformance.updating]))
   }
 
   return (
     <>
       <div className="flex content-center pl-2 py-2">
         <button
-          onClick={getDataFromAPI}
+          onClick={() => setLoading(true)}
           className="bg-gray-500 flex items-center"
         >
+          {
+            loading && <div role="status">
+              <svg
+                className="inline mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-purple-600"
+                viewBox="0 0 100 101"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                  fill="currentFill"
+                />
+              </svg>
+              <span className="sr-only">Loading...</span>
+            </div>
+         }
           Load Data {data ? "(" + data?.length + ")" : ""}
         </button>
         <button
@@ -441,7 +504,7 @@ function App() {
         />
         <br />
       </div>
-      {data &&
+      {data && (
         <table className="table-fixed bg-gray-700 text-gray-300 ml-2 mr-2">
           <thead>
             <tr className="border-b-2 border-gray-500">
@@ -468,42 +531,188 @@ function App() {
                   ? JSON.stringify(mapList.get(data[data.length - 1].id))
                   : ""}
               </td>
-              <td>{data ? JSON.stringify([...setList][data.length - 1]) : ""}</td>
+              <td>
+                {data ? JSON.stringify([...setList][data.length - 1]) : ""}
+              </td>
             </tr>
             <tr className="border-b-2 border-gray-500">
               <td className="font-bold pl-1">Loading Performance</td>
-              <td>{objectListPerformance.loading || 0}ms</td>
-              <td>{arrayListPerformance.loading || 0}ms</td>
-              <td>{mapListPerformance.loading || 0}ms</td>
-              <td>{setListPerformance.loading || 0}ms</td>
+              <td
+                className={
+                  bestLoadingPerformance &&
+                  bestLoadingPerformance === objectListPerformance.loading
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {objectListPerformance.loading || 0}ms
+              </td>
+              <td
+                className={
+                  bestLoadingPerformance &&
+                  bestLoadingPerformance === arrayListPerformance.loading
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {arrayListPerformance.loading || 0}ms
+              </td>
+              <td
+                className={
+                  bestLoadingPerformance &&
+                  bestLoadingPerformance === mapListPerformance.loading
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {mapListPerformance.loading || 0}ms
+              </td>
+              <td
+                className={
+                  bestLoadingPerformance &&
+                  bestLoadingPerformance === setListPerformance.loading
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {setListPerformance.loading || 0}ms
+              </td>
             </tr>
             <tr className="border-b-2 border-gray-500">
               <td className="font-bold pl-1">Deleting Performance</td>
-              <td>{objectListPerformance.deleting || 0}ms</td>
-              <td>{arrayListPerformance.deleting || 0}ms</td>
-              <td>{mapListPerformance.deleting || 0}ms</td>
-              <td>{setListPerformance.deleting || 0}ms</td>
+              <td
+                className={
+                  bestDeletingPerformance &&
+                  bestDeletingPerformance === objectListPerformance.deleting
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {objectListPerformance.deleting || 0}ms
+              </td>
+              <td
+                className={
+                  bestDeletingPerformance &&
+                  bestDeletingPerformance === arrayListPerformance.deleting
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {arrayListPerformance.deleting || 0}ms
+              </td>
+              <td
+                className={
+                  bestDeletingPerformance &&
+                  bestDeletingPerformance === mapListPerformance.deleting
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {mapListPerformance.deleting || 0}ms
+              </td>
+              <td
+                className={
+                  bestDeletingPerformance &&
+                  bestDeletingPerformance === setListPerformance.deleting
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {setListPerformance.deleting || 0}ms
+              </td>
             </tr>
             <tr className="border-b-2 border-gray-500">
               <td className="font-bold pl-1">Adding Performance</td>
-              <td>{objectListPerformance.adding || 0}ms</td>
-              <td>{arrayListPerformance.adding || 0}ms</td>
-              <td>{mapListPerformance.adding || 0}ms</td>
-              <td>{setListPerformance.adding || 0}ms</td>
+              <td
+                className={
+                  bestAddingPerformance &&
+                  bestAddingPerformance === objectListPerformance.adding
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {objectListPerformance.adding || 0}ms
+              </td>
+              <td
+                className={
+                  bestAddingPerformance &&
+                  bestAddingPerformance === arrayListPerformance.adding
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {arrayListPerformance.adding || 0}ms
+              </td>
+              <td
+                className={
+                  bestAddingPerformance &&
+                  bestAddingPerformance === mapListPerformance.adding
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {mapListPerformance.adding || 0}ms
+              </td>
+              <td
+                className={
+                  bestAddingPerformance &&
+                  bestAddingPerformance === setListPerformance.adding
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {setListPerformance.adding || 0}ms
+              </td>
             </tr>
             <tr className="border-b-2 border-gray-500">
               <td className="font-bold pl-1">Update Performance</td>
-              <td>{objectListPerformance.updating || 0}ms</td>
-              <td>{arrayListPerformance.updating || 0}ms</td>
-              <td>{mapListPerformance.updating || 0}ms</td>
-              <td>{setListPerformance.updating || 0}ms</td>
+              <td
+                className={
+                  bestUpdatingPerformance &&
+                  bestUpdatingPerformance === objectListPerformance.updating
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {objectListPerformance.updating || 0}ms
+              </td>
+              <td
+                className={
+                  bestUpdatingPerformance &&
+                  bestUpdatingPerformance === arrayListPerformance.updating
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {arrayListPerformance.updating || 0}ms
+              </td>
+              <td
+                className={
+                  bestUpdatingPerformance &&
+                  bestUpdatingPerformance === mapListPerformance.updating
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {mapListPerformance.updating || 0}ms
+              </td>
+              <td
+                className={
+                  bestUpdatingPerformance &&
+                  bestUpdatingPerformance === setListPerformance.updating
+                    ? "bestPerformance"
+                    : ""
+                }
+              >
+                {setListPerformance.updating || 0}ms
+              </td>
             </tr>
           </tbody>
         </table>
-      }
+      )}
       {!data && <div className="pl-2 text-left">No data</div>}
     </>
   );
 }
 
-export default App;
+export default App
